@@ -151,7 +151,6 @@ async function fetchServerData(serverAddress, isBedrock) {
         raw = (await axios.get(source.url, { timeout: 10000 })).data;
       }
       const status = source.normalize(raw);
-      console.log(`[${source.name}] Online: ${status.online} | Address: ${serverAddress}`);
       return status;
     } catch (err) {
       lastError = err.message;
@@ -160,17 +159,6 @@ async function fetchServerData(serverAddress, isBedrock) {
   }
 
   throw new Error(lastError || 'All status APIs failed');
-}
-
-function buildTimestamp() {
-  const d = new Date();
-  const months = ['January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'];
-  let h = d.getHours();
-  const period = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${h}:${minutes} ${period}`;
 }
 
 async function fetchStatusEmbed() {
@@ -188,11 +176,11 @@ async function fetchStatusEmbed() {
         .setTitle('Minecraft Status')
         .setColor('#FF0000')
         .setThumbnail(iconUrl)
+        .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f>`)
         .addFields(
           { name: '<:globe:1548402074360741958> Server Address', value: `\`${serverAddress}\``, inline: true },
           { name: '<:redcircle:1548402078643257496> Status', value: 'Offline', inline: true }
-        )
-        .setFooter({ text: buildTimestamp(), iconURL: client.user.displayAvatarURL() });
+        );
     }
 
     let cleanMotd = status.motd;
@@ -203,14 +191,14 @@ async function fetchStatusEmbed() {
       .setTitle('Minecraft Status')
       .setColor('#00FF00')
       .setThumbnail(iconUrl)
+      .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f>`)
       .addFields(
         { name: '<:greencircle:1548402079607951482> Status', value: 'Online', inline: true },
         { name: '<:people:1548402076298772560> Players Online', value: `**${status.playersOnline}** / **${status.playersMax}**`, inline: true },
         { name: '<:lightning:1548402072364257371> Latency', value: `${ping}ms`, inline: true },
         { name: '<:gear:1548402071362080848> Version', value: status.version, inline: true },
         { name: '<:scroll:1548402077460463626> MOTD', value: `\`\`\`\n${cleanMotd}\n\`\`\``, inline: false }
-      )
-      .setFooter({ text: buildTimestamp(), iconURL: client.user.displayAvatarURL() });
+      );
   } catch (error) {
     console.error(`[API Error] No reliable status for ${serverAddress}:`, error.message);
     return null;
