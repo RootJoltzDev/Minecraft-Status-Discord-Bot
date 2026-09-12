@@ -12,7 +12,9 @@ let statusMessage = null;
 function getFullServerAddress() {
   const ip = config.mcServerIP;
   const port = config.mcServerPort;
-  const isDefaultPort = (config.type === 'bedrock' && Number(port) === 19132) || (config.type !== 'bedrock' && Number(port) === 25565);
+  const isDefaultPort =
+    (config.type === 'bedrock' && Number(port) === 19132) ||
+    (config.type !== 'bedrock' && Number(port) === 25565);
 
   if (port && !isDefaultPort) {
     return `${ip}:${port}`;
@@ -51,10 +53,10 @@ function pingLegacy(host, port) {
         socket.destroy();
       }
     };
-    socket.on('connect', () => socket.write(Buffer.from([0xFE, 0x01])));
+    socket.on('connect', () => socket.write(Buffer.from([0xfe, 0x01])));
     socket.on('data', (chunk) => {
       buffer = Buffer.concat([buffer, chunk]);
-      if (buffer[0] === 0xFF) done(resolve, buffer);
+      if (buffer[0] === 0xff) done(resolve, buffer);
       else done(reject, new Error('Unexpected legacy ping response'));
     });
     socket.on('error', (err) => done(reject, err));
@@ -66,7 +68,7 @@ function pingLegacy(host, port) {
 }
 
 function parseLegacy(buffer) {
-  if (buffer[0] !== 0xFF || buffer.length < 6) throw new Error('Invalid legacy ping response');
+  if (buffer[0] !== 0xff || buffer.length < 6) throw new Error('Invalid legacy ping response');
   const body = buffer.subarray(1);
   let str = '';
   for (let i = 0; i + 1 < body.length; i += 2) {
@@ -135,7 +137,9 @@ async function fetchServerData(serverAddress, isBedrock) {
           version: data.version?.name || data.version || 'Unknown',
           playersOnline: data.players?.online ?? 0,
           playersMax: data.players?.max ?? 0,
-          playerList: data.players?.sample?.length ? data.players.sample.map((p) => p.name || p).join(', ') : 'None or Hidden',
+          playerList: data.players?.sample?.length
+            ? data.players.sample.map((p) => p.name || p).join(', ')
+            : 'None or Hidden',
         };
       },
     });
@@ -150,11 +154,9 @@ async function fetchServerData(serverAddress, isBedrock) {
       } else {
         raw = (await axios.get(source.url, { timeout: 10000 })).data;
       }
-      const status = source.normalize(raw);
-      return status;
+      return source.normalize(raw);
     } catch (err) {
       lastError = err.message;
-      console.error(`[${source.name}] Failed for ${serverAddress}: ${err.message}`);
     }
   }
 
@@ -167,42 +169,41 @@ async function fetchStatusEmbed() {
   const iconUrl = getIconUrl(serverAddress, isBedrock);
   const startTime = Date.now();
 
+  let status;
   try {
-    const status = await fetchServerData(serverAddress, isBedrock);
-    const ping = Date.now() - startTime;
+    status = await fetchServerData(serverAddress, isBedrock);
+  } catch (error) {
+    status = { online: false };
+  }
 
-    if (!status.online) {
-      return new EmbedBuilder()
-        .setTitle('Minecraft Status')
-        .setColor('#FF0000')
-        .setThumbnail(iconUrl)
-        .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f> `)
-        .addFields(
-          { name: '<:globe:1548402074360741958> Server Address', value: `\`${serverAddress}\``, inline: true },
-          { name: '<:redcircle:1548402078643257496> Status', value: 'Offline', inline: true }
-        );
-    }
+  const ping = Date.now() - startTime;
 
-    let cleanMotd = status.motd;
-
-    if (cleanMotd.length > 1024) cleanMotd = cleanMotd.substring(0, 1021) + '...';
-
+  if (!status.online) {
     return new EmbedBuilder()
       .setTitle('Minecraft Status')
-      .setColor('#00FF00')
+      .setColor('#FF0000')
       .setThumbnail(iconUrl)
       .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f> `)
       .addFields(
-        { name: '<:greencircle:1548402079607951482> Status', value: 'Online', inline: true },
-        { name: '<:people:1548402076298772560> Players Online', value: `**${status.playersOnline}** / **${status.playersMax}**`, inline: true },
-        { name: '<:lightning:1548402072364257371> Latency', value: `${ping}ms`, inline: true },
-        { name: '<:gear:1548402071362080848> Version', value: status.version, inline: true },
-        { name: '<:scroll:1548402077460463626> MOTD', value: `\`\`\`\n${cleanMotd}\n\`\`\``, inline: false }
+        { name: '<:redcircle:1548402078643257496> Status', value: 'Offline', inline: true }
       );
-  } catch (error) {
-    console.error(`[API Error] No reliable status for ${serverAddress}:`, error.message);
-    return null;
   }
+
+  let cleanMotd = status.motd;
+  if (cleanMotd.length > 1024) cleanMotd = cleanMotd.substring(0, 1021) + '...';
+
+  return new EmbedBuilder()
+    .setTitle('Minecraft Status')
+    .setColor('#00FF00')
+    .setThumbnail(iconUrl)
+    .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f> `)
+    .addFields(
+      { name: '<:greencircle:1548402079607951482> Status', value: 'Online', inline: true },
+      { name: '<:people:1548402076298772560> Players Online', value: `**${status.playersOnline}** / **${status.playersMax}**`, inline: true },
+      { name: '<:lightning:1548402072364257371> Latency', value: `${ping}ms`, inline: true },
+      { name: '<:gear:1548402071362080848> Version', value: status.version, inline: true },
+      { name: '<:scroll:1548402077460463626> MOTD', value: `\`\`\`\n${cleanMotd}\n\`\`\``, inline: false }
+    );
 }
 
 function isStatusMessage(message) {
@@ -239,16 +240,9 @@ async function deleteOtherStatusMessages(channel, keepId) {
 async function updateStatusMessage() {
   try {
     const channel = await client.channels.fetch(config.channelId);
-    if (!channel || !channel.isTextBased()) {
-      console.error('Invalid channel ID or channel is not text-based.');
-      return;
-    }
+    if (!channel || !channel.isTextBased()) return;
 
     const embed = await fetchStatusEmbed();
-    if (!embed) {
-      console.log('Skipping update this cycle (no reliable API response). Keeping last status.');
-      return;
-    }
 
     if (statusMessage) {
       try {
@@ -256,7 +250,6 @@ async function updateStatusMessage() {
         await statusMessage.edit({ embeds: [embed] });
         return;
       } catch (err) {
-        console.log('Status message missing or deleted. Searching channel...');
         statusMessage = null;
       }
     }
@@ -268,7 +261,6 @@ async function updateStatusMessage() {
         await statusMessage.edit({ embeds: [embed] });
         return;
       } catch (err) {
-        console.log('Found status message could not be edited. Sending new one...');
         statusMessage = null;
       }
     }
@@ -276,11 +268,10 @@ async function updateStatusMessage() {
     await deleteOtherStatusMessages(channel);
     statusMessage = await channel.send({ embeds: [embed] });
   } catch (error) {
-    console.error('Failed to update status message:', error.message);
+    // Suppress minor update failures
   }
 }
 
-// Modern Discord.js v14 event name to resolve deprecation warning
 client.once('clientReady', async () => {
   console.log(`Logged in as ${client.user.tag}! Starting status updates...`);
   statusMessage = null;
