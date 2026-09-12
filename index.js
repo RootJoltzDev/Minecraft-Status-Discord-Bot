@@ -176,7 +176,7 @@ async function fetchStatusEmbed() {
         .setTitle('Minecraft Status')
         .setColor('#FF0000')
         .setThumbnail(iconUrl)
-        .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f>`)
+        .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f> `)
         .addFields(
           { name: '<:globe:1548402074360741958> Server Address', value: `\`${serverAddress}\``, inline: true },
           { name: '<:redcircle:1548402078643257496> Status', value: 'Offline', inline: true }
@@ -191,7 +191,7 @@ async function fetchStatusEmbed() {
       .setTitle('Minecraft Status')
       .setColor('#00FF00')
       .setThumbnail(iconUrl)
-      .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f>`)
+      .setDescription(`Last Updated <t:${Math.floor(Date.now() / 1000)}:f> `)
       .addFields(
         { name: '<:greencircle:1548402079607951482> Status', value: 'Online', inline: true },
         { name: '<:people:1548402076298772560> Players Online', value: `**${status.playersOnline}** / **${status.playersMax}**`, inline: true },

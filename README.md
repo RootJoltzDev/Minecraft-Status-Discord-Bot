@@ -12,7 +12,7 @@ A Discord bot that posts a single, self-updating embed showing the status of a M
 - If no source responds, the last status is left untouched (no false "Offline")
 - Strips Minecraft color codes from MOTDs and filters out bare version strings
 - Uses your Discord server's custom emojis in field labels
-- Shows the embed's native timestamp (Discord renders it in each viewer's local time)
+- Shows **Last Updated** using a native Discord timestamp (renders in each viewer's local time)
 
 ## Requirements
 
