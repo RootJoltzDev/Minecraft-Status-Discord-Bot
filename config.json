@@ -1,0 +1,7 @@
+{
+  "token": "YOUR_BOT_TOKEN",
+  "channelId": "YOUR_CHANNEL_ID",
+  "mcServerIP": "play.example.com",
+  "mcServerPort": 25565,
+  "type": "java"
+}
